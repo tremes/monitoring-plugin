@@ -32,7 +32,7 @@ import {
 } from '../utils';
 import { dateTimeFormatter } from '../../console/utils/datetime';
 import { useTranslation } from 'react-i18next';
-import { AlertsChartBar, IncidentsDetailsAlert } from '../model';
+import { AlertsChartBar } from '../model';
 import { setAlertsAreLoading } from '../../../store/actions';
 import { MonitoringState } from '../../../store/store';
 import { isEmpty } from 'lodash-es';
@@ -59,33 +59,22 @@ const AlertsChart = ({ theme }: { theme: 'light' | 'dark' }) => {
   );
   const { t, i18n } = useTranslation(process.env.I18N_NAMESPACE);
 
-  const selectedGroupId = incidentsActiveFilters.groupId?.[0];
   const currentTime = incidentsLastRefreshTime ?? getCurrentTime();
 
-  const displayAlertsData = useMemo<IncidentsDetailsAlert[]>(() => {
-    if (!selectedGroupId) {
-      return [];
-    }
-
-    if (alertsAreLoading && isEmpty(alertsData)) {
-      return [];
-    }
-
-    return alertsData;
-  }, [alertsData, alertsAreLoading, selectedGroupId]);
+  const { i18n } = useTranslation();
   // Use dynamic date range based on actual alerts data instead of fixed chartDays
   const dateValues = useMemo(() => {
-    if (displayAlertsData.length === 0) {
+    if (!Array.isArray(alertsData) || alertsData.length === 0) {
       // Fallback to single day if no alerts data
       return generateDateArray(1, currentTime);
     }
-    return generateAlertsDateArray(displayAlertsData, currentTime);
-  }, [displayAlertsData, currentTime]);
+    return generateAlertsDateArray(alertsData, currentTime);
+  }, [alertsData, currentTime]);
 
   const chartData: AlertsChartBar[][] = useMemo(() => {
-    if (displayAlertsData.length === 0) return [];
-    return displayAlertsData.map((alert) => createAlertsChartBars(alert));
-  }, [displayAlertsData]);
+    if (alertsData.length === 0) return [];
+    return alertsData.map((alert) => createAlertsChartBars(alert));
+  }, [alertsData]);
 
   useEffect(() => {
     setChartContainerHeight(chartData?.length < 5 ? 300 : chartData?.length * 60);
@@ -130,7 +119,7 @@ const AlertsChart = ({ theme }: { theme: 'light' | 'dark' }) => {
     >
       <div ref={containerRef} data-test={DataTestIDs.AlertsChart.ChartContainer}>
         <CardTitle data-test={DataTestIDs.AlertsChart.Title}>{t('Alerts Timeline')}</CardTitle>
-        {isEmpty(incidentsActiveFilters.groupId) || isEmpty(displayAlertsData) ? (
+        {alertsAreLoading || isEmpty(incidentsActiveFilters.groupId) ? (
           <EmptyState
             variant="lg"
             style={{

@@ -241,13 +241,6 @@ const IncidentsPage = () => {
   }, [incidentsActiveFilters.days]);
 
   useEffect(() => {
-    // Clear alerts immediately if no incident is selected for alert processing
-    if (isEmpty(incidentForAlertProcessing)) {
-      dispatch(setAlertsData({ alertsData: [] }));
-      dispatch(setAlertsTableData({ alertsTableData: [] }));
-      return;
-    }
-
     (async () => {
       const currentTime = incidentsLastRefreshTime;
       Promise.all(
@@ -349,9 +342,6 @@ const IncidentsPage = () => {
           }
         } else {
           setIncidentForAlertProcessing([]);
-          // Clear alerts data when deselecting to avoid showing stale data
-          dispatch(setAlertsData({ alertsData: [] }));
-          dispatch(setAlertsTableData({ alertsTableData: [] }));
           dispatch(setAlertsAreLoading({ alertsAreLoading: false }));
         }
       })
@@ -389,19 +379,11 @@ const IncidentsPage = () => {
 
   const handleIncidentChartClick = useCallback(
     (groupId) => {
-      // Clear alerts data IMMEDIATELY when switching to a different incident
-      if (groupId !== selectedGroupId && groupId) {
-        dispatch(setAlertsData({ alertsData: [] }));
-        dispatch(setAlertsTableData({ alertsTableData: [] }));
-        dispatch(setAlertsAreLoading({ alertsAreLoading: true }));
-      }
-
       setFiltersExpanded({
         severity: false,
         state: false,
         groupId: false,
       });
-
       if (groupId === selectedGroupId) {
         dispatch(
           setIncidentsActiveFilters({
@@ -655,7 +637,7 @@ const IncidentsPage = () => {
                   />
                 </StackItem>
                 <StackItem>
-                  <AlertsChart key={selectedGroupId || 'no-selection'} theme={theme} />
+                  <AlertsChart theme={theme} />
                 </StackItem>
               </>
             )}
