@@ -308,10 +308,7 @@ const IncidentsPage = () => {
 
         if (isGroupSelected) {
           setIncidentForAlertProcessing(processIncidentsForAlerts(prometheusResults));
-          // Only set loading if we don't already have data to show
-          if (isEmpty(alertsData)) {
-            dispatch(setAlertsAreLoading({ alertsAreLoading: true }));
-          }
+          dispatch(setAlertsAreLoading({ alertsAreLoading: true }));
         } else {
           setIncidentForAlertProcessing([]);
           dispatch(setAlertsAreLoading({ alertsAreLoading: false }));
