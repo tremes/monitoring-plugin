@@ -55,16 +55,18 @@ export function deduplicateAlerts(objects: Array<PrometheusResult>): Array<Prome
       const existingObj = groupedObjects.get(key);
 
       // Deduplicate the incoming obj.values before concatenating
-      const existingValuesSet = new Set(existingObj.values.map((v) => JSON.stringify(v)));
-      const newValues = obj.values.filter((v) => !existingValuesSet.has(JSON.stringify(v)));
+      const existingValuesSet = new Set(existingObj.values.map((v) => `${v[0]}:${v[1]}`));
+      const newValues = obj.values.filter((v) => !existingValuesSet.has(`${v[0]}:${v[1]}`));
 
       // Concatenate non-duplicate values
       existingObj.values = existingObj.values.concat(newValues);
     } else {
       // Otherwise, create a new entry with deduplicated values
+      const uniqueValues = new Map();
+      obj.values.forEach((v) => uniqueValues.set(`${v[0]}:${v[1]}`, v));
       groupedObjects.set(key, {
         metric: obj.metric,
-        values: [...new Set(obj.values.map((v) => JSON.stringify(v)))].map((v) => JSON.parse(v)),
+        values: Array.from(uniqueValues.values()),
       });
     }
   }
@@ -107,9 +109,9 @@ function mergeIncidentsByKey(incidents: Array<Partial<Incident>>): Array<Partial
 
     if (existing) {
       // Merge values (deduplicate)
-      const existingValuesSet = new Set(existing.values.map((v) => JSON.stringify(v)));
+      const existingValuesSet = new Set(existing.values.map((v) => `${v[0]}:${v[1]}`));
       const newValues = (incident.values || []).filter(
-        (v) => !existingValuesSet.has(JSON.stringify(v)),
+        (v) => !existingValuesSet.has(`${v[0]}:${v[1]}`),
       );
       existing.values = existing.values.concat(newValues);
 
